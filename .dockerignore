@@ -1,0 +1,8 @@
+node_modules
+cert
+dist
+.prettierrc
+docker-compose.yml
+Dockerfile
+nodemon.json
+yarn.lock
