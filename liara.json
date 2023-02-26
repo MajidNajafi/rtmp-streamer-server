@@ -1,5 +1,5 @@
 {
   "platform": "docker",
-  "app": "rtmp",
+  "app": "media",
   "port": "3000"
 }

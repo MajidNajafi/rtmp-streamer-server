@@ -1,11 +1,17 @@
 import * as mediasoup from "mediasoup"
 import { Server } from "socket.io"
 import FFmpegStatic from "ffmpeg-static"
-import Process from "child_process"
+import Process, { execSync } from "child_process"
 import { runExpressApp } from "./servers/express"
 import { runWebServer } from "./servers/web-server"
 import { runSocketServer } from "./servers/socket"
-import { config } from "./config"
+import { AppConfig } from "./config"
+
+const currentDirectory = __dirname.split("/")
+currentDirectory.pop()
+const rootDir = currentDirectory.join("/")
+
+let config
 
 let worker: mediasoup.types.Worker
 let webServer
@@ -27,6 +33,10 @@ let streamProcess: Process.ChildProcessWithoutNullStreams | null
   // run servers
 ;(async () => {
   try {
+    const cmd = `curl -s http://checkip.amazonaws.com || printf "0.0.0.0"`
+    const ip = execSync(cmd).toString().trim()
+    console.log({ ip })
+    config = AppConfig.getInstance(ip).config
     expressApp = runExpressApp()
     webServer = await runWebServer(expressApp)
     socketServer = await runSocketServer(
@@ -379,7 +389,7 @@ function startStreaming() {
   // const cmdProgram = "ffmpeg"; // Found through $PATH
   const cmdProgram = FFmpegStatic // From package "ffmpeg-static"
 
-  let cmdInputPath = `${__dirname}/input/vp8.sdp`
+  let cmdInputPath = `${rootDir}/sdp/vp8.sdp`
 
   // Ensure correct FFmpeg version is installed
   const ffmpegOut = Process.execSync(cmdProgram + " -version", {
@@ -405,7 +415,7 @@ function startStreaming() {
 
   if (useVideo) {
     if (useH264) {
-      cmdInputPath = `${__dirname}/input/h264.sdp`
+      cmdInputPath = `${rootDir}/sdp/h264.sdp`
     }
   }
 

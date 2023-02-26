@@ -1,9 +1,11 @@
 import fs from "fs"
-import http, { Server } from "http"
+import https, { Server } from "https"
 import { Express } from "express"
-import { config } from "../config"
+import { AppConfig } from "../config"
 
 export async function runWebServer(expressApp: Express): Promise<Server> {
+  const config = AppConfig.getInstance().config
+
   const { certKey, cert } = config.server
 
   if (!fs.existsSync(certKey) || !fs.existsSync(cert)) {
@@ -11,7 +13,12 @@ export async function runWebServer(expressApp: Express): Promise<Server> {
     process.exit(0)
   }
 
-  const webServer = http.createServer(expressApp)
+  const tls = {
+    cert: fs.readFileSync(cert),
+    key: fs.readFileSync(certKey),
+  }
+
+  const webServer = https.createServer(tls, expressApp)
 
   webServer.on("error", (err) => {
     console.error("HTTP error:", err.message)

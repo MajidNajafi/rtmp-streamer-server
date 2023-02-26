@@ -2,9 +2,13 @@ version: "3"
 services:
   api:
     image: rtmp-streamer
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     networks:
       - backend
+    expose:
+      - 3000
     ports:
       - "3000:3000"
 

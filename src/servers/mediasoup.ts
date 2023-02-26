@@ -1,7 +1,9 @@
 import * as mediasoup from "mediasoup"
-import { config } from "../config"
+import { AppConfig } from "../config"
 
 export async function runMediasoupWorker() {
+  const config = AppConfig.getInstance().config
+
   const mediaWorker = await mediasoup.createWorker({
     logLevel: config.mediasoup.worker.logLevel,
     logTags: config.mediasoup.worker.logTags,
