@@ -33,7 +33,7 @@ let streamProcess: Process.ChildProcessWithoutNullStreams | null
   // run servers
 ;(async () => {
   try {
-    const cmd = `curl -s http://checkip.amazonaws.com || printf "0.0.0.0"`
+    const cmd = `curl icanhazip.com || printf "0.0.0.0"`
     const ip = execSync(cmd).toString().trim()
     console.log({ ip })
     config = AppConfig.getInstance(ip).config
@@ -47,6 +47,11 @@ let streamProcess: Process.ChildProcessWithoutNullStreams | null
       handleStartStreaming,
       handleStopStreaming,
     )
+
+    expressApp.get("/restart_server", (req, res) => {
+      res.send("restart command executed")
+      restartServer()
+    })
   } catch (err) {
     console.error(err)
   }
@@ -235,7 +240,10 @@ async function handleWebrtcRecvProduce(produceParameters: any, callback: any) {
 
 // ----------------------------------------------------------------------------
 
-async function handleStartStreaming() {
+async function handleStartStreaming(
+  streamer = "ffmpeg",
+  rtmpServer = config.rmtp.input,
+) {
   const router = mediasoupRouter
 
   const useAudio = audioEnabled()
@@ -350,7 +358,7 @@ async function handleStartStreaming() {
 
   // ----
 
-  await startStreaming()
+  await startStreaming(rtmpServer)
 
   if (useAudio) {
     const consumer = rtpAudioConsumer
@@ -375,7 +383,7 @@ async function handleStartStreaming() {
 // ----
 
 // FFmpeg Streamer
-function startStreaming() {
+function startStreaming(rtmpServer) {
   // Return a Promise that can be awaited
   let recResolve: any
   const promise = new Promise((res, _rej) => {
@@ -427,7 +435,7 @@ function startStreaming() {
     `-i ${cmdInputPath}`,
     "-acodec aac -vcodec libx264 -preset ultrafast -tune zerolatency",
     "-f flv",
-    config.rmtp.input,
+    rtmpServer,
   ]
     .join(" ")
     .trim()
@@ -493,14 +501,19 @@ function stopMediasoupRtp() {
   const useVideo = videoEnabled()
 
   if (useAudio) {
-    rtpAudioConsumer.close()
-    rtpAudioTransport.close()
+    rtpAudioConsumer?.close()
+    rtpAudioTransport?.close()
   }
 
   if (useVideo) {
-    rtpVideoConsumer.close()
-    rtpVideoTransport.close()
+    rtpVideoConsumer?.close()
+    rtpVideoTransport?.close()
   }
 }
 
 // ----------------------------------------------------------------------------
+
+function restartServer() {
+  const cmd = "pm2 restart app"
+  execSync(cmd)
+}

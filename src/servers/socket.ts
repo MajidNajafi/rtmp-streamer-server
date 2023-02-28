@@ -31,6 +31,7 @@ export async function runSocketServer(
       socket.on("WEBRTC_RECV_PRODUCE", handleWebrtcRecvProduce)
       socket.on("START_RECORDING", handleStartStreaming)
       socket.on("STOP_RECORDING", handleStopStreaming)
+      socket.on("disconnect", handleStopStreaming)
     })
 
     resolve(io)
